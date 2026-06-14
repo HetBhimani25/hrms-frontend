@@ -1,34 +1,5 @@
-/* CSS Variables */
 :root {
-  /* PREMIUM LIGHT THEME */
-  --bg-app: #f0f4f8;
-  --bg-sidebar: #ffffff;
-  --bg-header: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.95);
-  
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  
-  --border-color: #cbd5e1;
-  --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-  
-  --accent: #2563eb;
-  --accent-soft: rgba(37, 99, 235, 0.1);
-  --accent-hover: #1d4ed8;
-  
-  --danger: #ef4444;
-  --success: #10b981;
-  
-  /* Login Specific */
-  --login-bg-page: radial-gradient(circle at top, #e0e7ff 0, #f0f4f8 55%, #cbd5e1 100%);
-  --login-bg-right: linear-gradient(135deg, #ffffff, #f1f5f9 60%, #e2e8f0 100%);
-  --login-glass: #ffffff;
-  --login-focus-bg: transparent;
-  --login-input-border: #cbd5e1;
-}
-
-[data-theme="dark"] {
-  /* DARK THEME */
+  /* ===== PREMIUM DARK THEME (ONLY) ===== */
   --bg-app: #020617;
   --bg-sidebar: rgba(2, 6, 23, 0.85);
   --bg-header: rgba(2, 6, 23, 0.9);
@@ -38,7 +9,8 @@
   --text-muted: #94a3b8;
   
   --border-color: rgba(255, 255, 255, 0.1);
-  --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --bg-hover: rgba(15, 23, 42, 0.6);
   
   --accent: #3b82f6;
   --accent-soft: rgba(59, 130, 246, 0.2);
@@ -55,7 +27,15 @@
   --login-input-border: rgba(51, 65, 85, 0.95);
 }
 
-body.dark-theme, body.light-theme {
+/* Global Smooth Transitions */
+*, *::before, *::after {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
   background: var(--bg-app);
   color: var(--text-main);
 }
@@ -74,7 +54,7 @@ body.dark-theme, body.light-theme {
   background: var(--bg-header) !important;
   border-bottom: 1px solid var(--border-color) !important;
   position: relative;
-  z-index: 9999;
+  z-index: 999999;
 }
 
 .stat-card {
@@ -118,25 +98,7 @@ select:focus {
   background-color: var(--bg-card) !important;
 }
 
-.theme-toggle {
-  background: var(--bg-app);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
 
-.theme-toggle:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-}
 
 /* Smart Hover Tooltips */
 .info-icon-wrapper {
@@ -161,8 +123,8 @@ select:focus {
 
 .info-popup {
   position: absolute;
-  bottom: 120%; /* Pop up above the row to avoid table cuts typically */
-  right: 0;
+  right: calc(100% + 15px);
+  top: 50%;
   width: 260px;
   background: var(--bg-card);
   backdrop-filter: blur(20px);
@@ -173,7 +135,7 @@ select:focus {
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s, transform 0.2s;
-  transform: translateY(10px);
+  transform: translateY(-50%) translateX(10px);
   z-index: 100000;
   text-align: left;
   font-size: 13px;
@@ -196,19 +158,18 @@ tr:hover {
 .info-popup:hover {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateY(-50%) translateX(0);
   pointer-events: auto;
 }
 
 /* Bridge gap so cursor can travel to popup without closing */
-/* Bridge gap so cursor can travel to popup without closing */
 .info-popup::after {
   content: "";
   position: absolute;
-  top: 100%;
-  right: 0;
-  height: 20px;
-  width: 100px;
+  top: 0;
+  left: 100%;
+  height: 100%;
+  width: 20px;
 }
 
 /* Toast Notifications */
@@ -368,4 +329,15 @@ tr:hover {
 .pagination-number:hover:not(.active) {
   background: var(--bg-hover);
   color: var(--text-main);
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

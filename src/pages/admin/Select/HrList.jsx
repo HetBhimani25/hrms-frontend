@@ -28,11 +28,6 @@ export default function HrList() {
     }
   };
 
-  // const handleStatus = async (id) => {
-  //   await toggleHrStatus(id);
-  //   loadHrs();
-  // };
-
   return (
     // <div>
     //   <h2>HR Management</h2>

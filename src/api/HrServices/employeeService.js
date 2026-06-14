@@ -19,3 +19,6 @@ export const disableEmployee = (id) =>
 
 export const deleteEmployee = (id) => 
   api.delete(`${BASE}/${id}`);
+
+export const getManagersByDepartment = (dept) =>
+  api.get(`${BASE}/managers`, { params: { department: dept } });

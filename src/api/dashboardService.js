@@ -11,3 +11,9 @@ export const getManagerDashboardStats = () =>
 
 export const getHrDashboardStats = () =>
   api.get("/hr/dashboard/stats");
+
+export const getRecentActivities = () =>
+  api.get("/admin/dashboard/recent-activities");
+
+export const getAllActivities = (params) =>
+  api.get("/admin/dashboard/activities", { params });

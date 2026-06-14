@@ -17,7 +17,8 @@ function EmployeeCreate() {
     joiningDate: "",
   });
 
-  const [setLoading] = useState(false);
+  const [loading , setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -89,12 +90,35 @@ function EmployeeCreate() {
             value={form.email}
             onChange={handleChange}
           />
-          <input
-            name="password"
-            placeholder="Password"
-            onChange={handleChange}
-            required
-          />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <input
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              onChange={handleChange}
+              onCopy={(e) => e.preventDefault()}
+              onPaste={(e) => e.preventDefault()}
+              required
+              style={{ width: '100%', paddingRight: '60px' }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '15px',
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.5)',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                textTransform: 'uppercase'
+              }}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
           <input
             name="fullName"
             placeholder="Full Name"

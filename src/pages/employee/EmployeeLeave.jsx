@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/immutability */
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { applyLeave, getEmployeeLeaves } from "../../api/LeaveServices/leaveService";
 import "../../styles/hr.css"; 
 import { useToast } from "../../components/ToastContext"; 
@@ -17,8 +17,27 @@ function EmployeeLeave() {
   });
   const { addToast } = useToast();
 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const leaveTypes = [
+    { value: "SICK", label: "Sick Leave" },
+    { value: "CASUAL", label: "Casual Leave" },
+    { value: "ANNUAL", label: "Annual Leave" },
+    { value: "MATERNITY", label: "Maternity Leave" },
+    { value: "PATERNITY", label: "Paternity Leave" }
+  ];
+
   useEffect(() => {
     loadLeaves();
+
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const loadLeaves = async () => {
@@ -68,20 +87,83 @@ function EmployeeLeave() {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 1fr) minmax(300px, 2fr)', gap: '20px' }}>
-            <div>
+            {/* Custom Premium Dropdown for Leave Type */}
+            <div className="custom-dropdown-container" ref={dropdownRef} style={{ position: 'relative', width: '100%' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-muted)' }}>Leave Type</label>
-              <select
-                value={form.leaveType}
-                onChange={(e) => setForm({ ...form, leaveType: e.target.value })}
-                required
-                style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'var(--text-main)', border: '1px solid var(--border-color)' }}
+              <div 
+                className={`custom-dropdown-trigger ${isDropdownOpen ? 'active' : ''}`}
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                style={{
+                    background: "rgba(255, 255, 255, 0.05)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    color: form.leaveType ? "#fff" : "rgba(255,255,255,0.5)",
+                    padding: "0 15px",
+                    height: "45px",
+                    borderRadius: "10px",
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    transition: 'all 0.3s ease',
+                    userSelect: 'none'
+                }}
               >
-                <option value="SICK">Sick Leave</option>
-                <option value="CASUAL">Casual Leave</option>
-                <option value="ANNUAL">Annual Leave</option>
-                <option value="MATERNITY">Maternity Leave</option>
-                <option value="PATERNITY">Paternity Leave</option>
-              </select>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span>{leaveTypes.find(t => t.value === form.leaveType)?.label || "Select Leave Type"}</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.3s ease', transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0)' }}>
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </div>
+
+              {isDropdownOpen && (
+                <div className="custom-dropdown-menu" style={{
+                    position: 'absolute',
+                    top: '75px',
+                    left: 0,
+                    right: 0,
+                    background: "#0f172a",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    borderRadius: "12px",
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                    zIndex: 100,
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    animation: 'dropdownFade 0.2s ease-out'
+                }}>
+                    {leaveTypes.map((t) => (
+                        <div 
+                            key={t.value}
+                            className="dropdown-item"
+                            onClick={() => { setForm({...form, leaveType: t.value}); setIsDropdownOpen(false); }}
+                            style={{
+                                padding: '12px 15px',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                background: form.leaveType === t.value ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                                color: form.leaveType === t.value ? '#60a5fa' : 'rgba(255,255,255,0.7)',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (form.leaveType !== t.value) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                                e.currentTarget.style.color = '#fff';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = form.leaveType === t.value ? 'rgba(59, 130, 246, 0.1)' : 'transparent';
+                                e.currentTarget.style.color = form.leaveType === t.value ? '#60a5fa' : 'rgba(255,255,255,0.7)';
+                            }}
+                        >
+                            <span>{t.label}</span>
+                            {form.leaveType === t.value && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                        </div>
+                    ))}
+                </div>
+              )}
             </div>
 
             <div>
@@ -91,7 +173,7 @@ function EmployeeLeave() {
                 placeholder="Briefly describe your reason..."
                 value={form.reason}
                 onChange={(e) => setForm({ ...form, reason: e.target.value })}
-                style={{ width: '100%', padding: '12px', borderRadius: '10px' }}
+                style={{ width: '100%', padding: '0 15px', height: '45px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.05)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.1)', outline: 'none' }}
               />
             </div>
           </div>
@@ -105,7 +187,7 @@ function EmployeeLeave() {
                 min={new Date().toISOString().split('T')[0]}
                 onChange={(e) => setForm({ ...form, startDate: e.target.value })}
                 required
-                style={{ width: '100%', padding: '12px', borderRadius: '10px' }}
+                style={{ width: '100%', padding: '0 15px', height: '45px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.05)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.1)', outline: 'none' }}
               />
             </div>
             
@@ -117,7 +199,7 @@ function EmployeeLeave() {
                 min={form.startDate || new Date().toISOString().split('T')[0]}
                 onChange={(e) => setForm({ ...form, endDate: e.target.value })}
                 required
-                style={{ width: '100%', padding: '12px', borderRadius: '10px' }}
+                style={{ width: '100%', padding: '0 15px', height: '45px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.05)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.1)', outline: 'none' }}
               />
             </div>
           </div>

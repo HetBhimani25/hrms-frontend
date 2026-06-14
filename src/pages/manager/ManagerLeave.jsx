@@ -42,8 +42,8 @@ function ManagerLeave() {
   };
 
   return (
-    <div className="hr-page" style={{ padding: '0px', display: 'flex', flexDirection: 'column' }}>
-      <div className="hr-card" style={{ maxWidth: '1000px', margin: '0' }}>
+    <div className="hr-page" style={{ padding: '20px 0', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
+      <div className="hr-card" style={{ width: '100%', margin: '0' }}>
         <div className="hr-header">
           <h2 className="hr-title">Team Leave Approvals (Manager)</h2>
         </div>

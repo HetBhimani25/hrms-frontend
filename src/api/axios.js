@@ -1,21 +1,8 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080/api",
-});
-
-/* REQUEST INTERCEPTOR */
-api.interceptors.request.use((config) => {
-  const auth = localStorage.getItem("auth");
-
-  if (auth) {
-    const { accessToken } = JSON.parse(auth);
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-  }
-
-  return config;
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080/api",
+  withCredentials: true, // Crucial for sending/receiving HttpOnly cookies
 });
 
 let isRefreshing = false;
@@ -25,8 +12,8 @@ const subscribeTokenRefresh = (cb) => {
   refreshSubscribers.push(cb);
 };
 
-const onRefreshed = (token) => {
-  refreshSubscribers.forEach((cb) => cb(token));
+const onRefreshed = () => {
+  refreshSubscribers.forEach((cb) => cb());
   refreshSubscribers = [];
 };
 
@@ -34,15 +21,25 @@ const onRefreshed = (token) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-
     const originalRequest = error.config;
 
+    // If 401 Unauthorized and we haven't already retried this request
     if (error.response?.status === 401 && !originalRequest._retry) {
       
+      // Prevent infinite loops if the refresh endpoint itself returns 401
+      // Also do not attempt to refresh if the login request itself fails (e.g. wrong password)
+      if (originalRequest.url.includes('/auth/refresh') || originalRequest.url.includes('/auth/login')) {
+         if (originalRequest.url.includes('/auth/refresh')) {
+             localStorage.removeItem("auth");
+             window.location.href = "/login";
+         }
+         return Promise.reject(error);
+      }
+
       if (isRefreshing) {
         return new Promise((resolve) => {
-          subscribeTokenRefresh((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
+          subscribeTokenRefresh(() => {
+            // The browser will automatically attach the new HttpOnly accessToken cookie
             resolve(api(originalRequest));
           });
         });
@@ -52,23 +49,18 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const auth = JSON.parse(localStorage.getItem("auth"));
-
-        const res = await axios.post(
-          "http://localhost:8080/api/auth/refresh",
-          { refreshToken: auth.refreshToken }
+        // We don't need to pass the refresh token in the body anymore;
+        // it will be sent automatically as an HttpOnly cookie if it exists.
+        await axios.post(
+          `${import.meta.env.VITE_API_URL || "http://localhost:8080/api"}/auth/refresh`,
+          {},
+          { withCredentials: true }
         );
 
-        const newToken = res.data.accessToken;
-
-        auth.accessToken = newToken;
-        localStorage.setItem("auth", JSON.stringify(auth));
-
         isRefreshing = false;
-        onRefreshed(newToken);
+        onRefreshed();
 
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-
+        // Retry the original request; the new HttpOnly cookie will be included automatically
         return api(originalRequest);
 
       } catch (err) {

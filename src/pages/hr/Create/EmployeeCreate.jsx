@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createEmployee } from "../../../api/HrServices/employeeService";
+import { createEmployee, getManagersByDepartment } from "../../../api/HrServices/employeeService";
 import "../../../styles/hr.css";
 import { useToast } from "../../../components/ToastContext";
+import React, { useEffect, useRef } from "react";
+import { ArrowLeft } from "lucide-react";
 
 function EmployeeCreate() {
   const navigate = useNavigate();
@@ -15,9 +17,61 @@ function EmployeeCreate() {
     department: "",
     designation: "",
     joiningDate: "",
+    managerId: "",
   });
 
+  const [managers, setManagers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [isDeptDropdownOpen, setIsDeptDropdownOpen] = useState(false);
+  const [isManagerDropdownOpen, setIsManagerDropdownOpen] = useState(false);
+  const [isDesigDropdownOpen, setIsDesigDropdownOpen] = useState(false);
+  
+  const deptDropdownRef = useRef(null);
+  const managerDropdownRef = useRef(null);
+  const desigDropdownRef = useRef(null);
+
+  const departments = [
+    "Software Engineering", "Quality Assurance", "DevOps & Infrastructure", 
+    "Product Management", "UI/UX Design", "Data Science & AI", 
+    "Cybersecurity", "IT Support", "Finance & Administration"
+  ];
+
+  const designations = ["Junior Developer", "Senior Developer", "Software Engineer"];
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (deptDropdownRef.current && !deptDropdownRef.current.contains(event.target)) {
+        setIsDeptDropdownOpen(false);
+      }
+      if (managerDropdownRef.current && !managerDropdownRef.current.contains(event.target)) {
+        setIsManagerDropdownOpen(false);
+      }
+      if (desigDropdownRef.current && !desigDropdownRef.current.contains(event.target)) {
+        setIsDesigDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (form.department) {
+      fetchManagers(form.department);
+    } else {
+      setManagers([]);
+    }
+  }, [form.department]);
+
+  const fetchManagers = async (dept) => {
+    try {
+      const res = await getManagersByDepartment(dept);
+      setManagers(res.data);
+    } catch (e) {
+      addToast("Failed to fetch managers for this department", "error");
+    }
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -40,7 +94,33 @@ function EmployeeCreate() {
   return (
     <div className="form-wrapper">
       <div className="form-card">
-        <h3>Create Employee</h3>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px', gap: '15px' }}>
+          <button 
+            onClick={() => navigate("/hr/employee")}
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+            }}
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <h3 style={{ margin: 0 }}>Create Employee</h3>
+        </div>
 
         <form onSubmit={handleSubmit} className="form-grid">
           <input
@@ -50,13 +130,35 @@ function EmployeeCreate() {
             onChange={handleChange}
             required
           />
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            onChange={handleChange}
-            required
-          />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <input
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              onChange={handleChange}
+              onCopy={(e) => e.preventDefault()}
+              onPaste={(e) => e.preventDefault()}
+              required
+              style={{ width: '100%', paddingRight: '60px' }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '15px',
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.5)',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                textTransform: 'uppercase'
+              }}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
           <input
             name="fullName"
             placeholder="Full Name"
@@ -70,23 +172,303 @@ function EmployeeCreate() {
             value={form.phone}
             onChange={handleChange}
           />
-          <input
-            name="department"
-            placeholder="Department"
-            value={form.department}
-            onChange={handleChange}
-          />
-          <input
-            name="designation"
-            placeholder="Designation"
-            value={form.designation}
-            onChange={handleChange}
-          />
+          
+          {/* Custom Premium Dropdown for Department */}
+          <div className="custom-dropdown-container" ref={deptDropdownRef} style={{ position: 'relative', width: '100%' }}>
+            <div 
+              className={`custom-dropdown-trigger ${isDeptDropdownOpen ? 'active' : ''}`}
+              onClick={() => setIsDeptDropdownOpen(!isDeptDropdownOpen)}
+              style={{
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: form.department ? "#fff" : "rgba(255,255,255,0.5)",
+                  padding: "0 15px",
+                  height: "45px",
+                  borderRadius: "12px",
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  transition: 'all 0.3s ease',
+                  userSelect: 'none'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span>{form.department || "Select Department"}</span>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.3s ease', transform: isDeptDropdownOpen ? 'rotate(180deg)' : 'rotate(0)' }}>
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+
+            {isDeptDropdownOpen && (
+              <div className="custom-dropdown-menu" style={{
+                  position: 'absolute',
+                  top: '55px',
+                  left: 0,
+                  right: 0,
+                  background: "#0f172a",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: "12px",
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                  zIndex: 100,
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  animation: 'dropdownFade 0.2s ease-out'
+              }}>
+                  <div 
+                      className="dropdown-item"
+                      onClick={() => { setForm({...form, department: "", managerId: ""}); setIsDeptDropdownOpen(false); }}
+                      style={{
+                          padding: '12px 15px',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          background: form.department === "" ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                          color: form.department === "" ? '#60a5fa' : 'rgba(255,255,255,0.7)',
+                          transition: 'background 0.2s'
+                      }}
+                  >
+                      <span>Select Department</span>
+                      {form.department === "" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                  </div>
+                  {departments.map((d) => (
+                      <div 
+                          key={d}
+                          className="dropdown-item"
+                          onClick={() => { setForm({...form, department: d, managerId: ""}); setIsDeptDropdownOpen(false); }}
+                          style={{
+                              padding: '12px 15px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              borderTop: '1px solid rgba(255,255,255,0.05)',
+                              background: form.department === d ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                              color: form.department === d ? '#60a5fa' : 'rgba(255,255,255,0.7)',
+                              transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                              if (form.department !== d) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                              e.currentTarget.style.color = '#fff';
+                          }}
+                          onMouseLeave={(e) => {
+                              e.currentTarget.style.background = form.department === d ? 'rgba(59, 130, 246, 0.1)' : 'transparent';
+                              e.currentTarget.style.color = form.department === d ? '#60a5fa' : 'rgba(255,255,255,0.7)';
+                          }}
+                      >
+                          <span>{d}</span>
+                          {form.department === d && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                      </div>
+                  ))}
+              </div>
+            )}
+          </div>
+
+          {/* Custom Premium Dropdown for Manager */}
+          <div className="custom-dropdown-container" ref={managerDropdownRef} style={{ position: 'relative', width: '100%' }}>
+            <div 
+              className={`custom-dropdown-trigger ${isManagerDropdownOpen ? 'active' : ''}`}
+              onClick={() => {
+                if(form.department) setIsManagerDropdownOpen(!isManagerDropdownOpen);
+              }}
+              style={{
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: form.managerId ? "#fff" : "rgba(255,255,255,0.5)",
+                  padding: "0 15px",
+                  height: "45px",
+                  borderRadius: "12px",
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: form.department ? 'pointer' : 'not-allowed',
+                  opacity: form.department ? 1 : 0.5,
+                  fontSize: '14px',
+                  transition: 'all 0.3s ease',
+                  userSelect: 'none'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span>{form.managerId ? managers.find(m => m.id == form.managerId)?.fullName || "Select Reporting Manager" : "Select Reporting Manager"}</span>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.3s ease', transform: isManagerDropdownOpen ? 'rotate(180deg)' : 'rotate(0)' }}>
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+
+            {isManagerDropdownOpen && form.department && (
+              <div className="custom-dropdown-menu" style={{
+                  position: 'absolute',
+                  top: '55px',
+                  left: 0,
+                  right: 0,
+                  background: "#0f172a",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: "12px",
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                  zIndex: 100,
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  animation: 'dropdownFade 0.2s ease-out'
+              }}>
+                  <div 
+                      className="dropdown-item"
+                      onClick={() => { setForm({...form, managerId: ""}); setIsManagerDropdownOpen(false); }}
+                      style={{
+                          padding: '12px 15px',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          background: form.managerId === "" ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                          color: form.managerId === "" ? '#60a5fa' : 'rgba(255,255,255,0.7)',
+                          transition: 'background 0.2s'
+                      }}
+                  >
+                      <span>Select Reporting Manager</span>
+                      {form.managerId === "" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                  </div>
+                  {managers.map((m) => (
+                      <div 
+                          key={m.id}
+                          className="dropdown-item"
+                          onClick={() => { setForm({...form, managerId: m.id}); setIsManagerDropdownOpen(false); }}
+                          style={{
+                              padding: '12px 15px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              borderTop: '1px solid rgba(255,255,255,0.05)',
+                              background: form.managerId == m.id ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                              color: form.managerId == m.id ? '#60a5fa' : 'rgba(255,255,255,0.7)',
+                              transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                              if (form.managerId != m.id) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                              e.currentTarget.style.color = '#fff';
+                          }}
+                          onMouseLeave={(e) => {
+                              e.currentTarget.style.background = form.managerId == m.id ? 'rgba(59, 130, 246, 0.1)' : 'transparent';
+                              e.currentTarget.style.color = form.managerId == m.id ? '#60a5fa' : 'rgba(255,255,255,0.7)';
+                          }}
+                      >
+                          <span>{m.fullName}</span>
+                          {form.managerId == m.id && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                      </div>
+                  ))}
+              </div>
+            )}
+          </div>
+
+          {/* Custom Premium Dropdown for Designation */}
+          <div className="custom-dropdown-container" ref={desigDropdownRef} style={{ position: 'relative', width: '100%' }}>
+            <div 
+              className={`custom-dropdown-trigger ${isDesigDropdownOpen ? 'active' : ''}`}
+              onClick={() => setIsDesigDropdownOpen(!isDesigDropdownOpen)}
+              style={{
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: form.designation ? "#fff" : "rgba(255,255,255,0.5)",
+                  padding: "0 15px",
+                  height: "45px",
+                  borderRadius: "12px",
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  transition: 'all 0.3s ease',
+                  userSelect: 'none'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span>{form.designation || "Select Designation"}</span>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.3s ease', transform: isDesigDropdownOpen ? 'rotate(180deg)' : 'rotate(0)' }}>
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+
+            {isDesigDropdownOpen && (
+              <div className="custom-dropdown-menu" style={{
+                  position: 'absolute',
+                  top: '55px',
+                  left: 0,
+                  right: 0,
+                  background: "#0f172a",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: "12px",
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                  zIndex: 100,
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  animation: 'dropdownFade 0.2s ease-out'
+              }}>
+                  <div 
+                      className="dropdown-item"
+                      onClick={() => { setForm({...form, designation: ""}); setIsDesigDropdownOpen(false); }}
+                      style={{
+                          padding: '12px 15px',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          background: form.designation === "" ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                          color: form.designation === "" ? '#60a5fa' : 'rgba(255,255,255,0.7)',
+                          transition: 'background 0.2s'
+                      }}
+                  >
+                      <span>Select Designation</span>
+                      {form.designation === "" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                  </div>
+                  {designations.map((d) => (
+                      <div 
+                          key={d}
+                          className="dropdown-item"
+                          onClick={() => { setForm({...form, designation: d}); setIsDesigDropdownOpen(false); }}
+                          style={{
+                              padding: '12px 15px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              borderTop: '1px solid rgba(255,255,255,0.05)',
+                              background: form.designation === d ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                              color: form.designation === d ? '#60a5fa' : 'rgba(255,255,255,0.7)',
+                              transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                              if (form.designation !== d) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                              e.currentTarget.style.color = '#fff';
+                          }}
+                          onMouseLeave={(e) => {
+                              e.currentTarget.style.background = form.designation === d ? 'rgba(59, 130, 246, 0.1)' : 'transparent';
+                              e.currentTarget.style.color = form.designation === d ? '#60a5fa' : 'rgba(255,255,255,0.7)';
+                          }}
+                      >
+                          <span>{d}</span>
+                          {form.designation === d && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                      </div>
+                  ))}
+              </div>
+            )}
+          </div>
           <input
             type="date"
             name="joiningDate"
             value={form.joiningDate}
             onChange={handleChange}
+            max={new Date().toISOString().split("T")[0]}
           />
 
           <button className="primary-btn" disabled={loading}>

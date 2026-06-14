@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import HomeRedirect from "./routes/HomeRedirect";
 import { ToastProvider } from "./components/ToastContext";
+import TopLoader from "./components/TopLoader";
 
 /* ADMIN */
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -14,6 +15,8 @@ import HrCreate from "./pages/admin/Create/HrCreate";
 import ManagerCreate from "./pages/admin/Create/ManagerCreate";
 import HrEdit from "./pages/admin/Edit/HrEdit";
 import ManagerEdit from "./pages/admin/Edit/ManagerEdit";
+import ActivityLogs from "./pages/admin/ActivityLogs";
+import AdminEmployeeList from "./pages/admin/AdminEmployeeList";
 
 /* HR */
 import HrLayout from "./pages/hr/HrLayout";
@@ -36,6 +39,7 @@ import EmployeeLeave from "./pages/employee/EmployeeLeave";
 function App() {
   return (
     <BrowserRouter>
+      <TopLoader />
       <ToastProvider>
         <Routes>
           <Route path="/" element={<HomeRedirect />} />
@@ -57,6 +61,8 @@ function App() {
             <Route path="manager" element={<ManagerManagement />} />
             <Route path="manager/create" element={<ManagerCreate />} />
             <Route path="manager/edit/:id" element={<ManagerEdit />} />
+            <Route path="activities" element={<ActivityLogs />} />
+            <Route path="employees" element={<AdminEmployeeList />} />
           </Route>
 
           {/* HR */}

@@ -1,8 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import api from "../../api/axios";
-import ThemeToggle from "../../theme/ThemeToggle";
-import NotificationBell from "../../components/NotificationBell";
 import { useToast } from "../../components/ToastContext";
 
 function ManagerLayout() {
@@ -22,7 +20,7 @@ function ManagerLayout() {
       console.error("Logout failed", e);
     } finally {
       logout();
-      addToast("Logged out successfully", "info");
+      addToast("Logged out successfully", "error");
       navigate("/login");
     }
   };
@@ -35,8 +33,6 @@ function ManagerLayout() {
         <h2>Manager Dashboard</h2>
 
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <NotificationBell />
-          <ThemeToggle />
           <button className="logout-btn" onClick={handleLogout}>
             Logout
           </button>

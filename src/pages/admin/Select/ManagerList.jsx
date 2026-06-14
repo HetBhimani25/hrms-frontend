@@ -14,8 +14,12 @@ export default function ManagerList() {
   }, []);
 
   const loadManagers = async () => {
-    const res = await getAllManagers();
-    setManagers(res.data);
+    try {    
+      const res = await getAllManagers();
+      setManagers(res.data);
+    } catch{
+      alert("Failed to load Managers");    
+    }
   };
 
   const handleDelete = async (id) => {
@@ -26,7 +30,6 @@ export default function ManagerList() {
   };
 
   return (    
-
     <div className="manager-page">
       <div className="manager-header">
         <h2>MANAGER Management</h2>

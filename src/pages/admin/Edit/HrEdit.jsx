@@ -5,7 +5,6 @@ import { getHrById, updateHr } from "../../../api/AdminServices/hrService";
 import "../../../styles/hr.css";
 import { useToast } from "../../../components/ToastContext";
 
-
 export default function HrEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -17,7 +16,7 @@ export default function HrEdit() {
     phone: "",
     department: "",
     designation: "",
-    joiningDate: ""
+    joiningDate: "",
   });
 
   useEffect(() => {
@@ -39,28 +38,13 @@ export default function HrEdit() {
       addToast("HR updated successfully!", "success");
       navigate("/admin/hr");
     } catch (err) {
-      addToast("Failed to update HR", "error");
+      addToast(err.response?.data?.message || "Failed to update HR", "error");
     }
   };
 
   return (
-    // <div>
-    //   <h2>Edit HR</h2>
-
-    //   <form onSubmit={handleSubmit}>
-    //     <input name="email" value={form.email} onChange={handleChange} />
-    //     <input name="name" value={form.fullName} onChange={handleChange} />
-    //     <input name="phone" value={form.phone} onChange={handleChange} />
-    //     <input name="department" value={form.department} onChange={handleChange} />
-    //     <input name="designation" value={form.designation} onChange={handleChange} />
-    //     <input name="joiningDate" value={form.joiningDate} onChange={handleChange} />
-
-    //     <button type="submit">Update</button>
-    //   </form>
-    // </div>
-<div className="form-wrapper">
-
-    <div className="form-card">
+    <div className="form-wrapper">
+      <div className="form-card">
         <h3>Edit HR</h3>
 
         <form onSubmit={handleSubmit} className="form-grid">
@@ -84,29 +68,26 @@ export default function HrEdit() {
           />
           <input
             name="department"
-            placeholder="Department"
+            placeholder="Human Resource"
             value={form.department}
             onChange={handleChange}
             readOnly
           />
-          <input
-            name="designation"
-            placeholder="Designation"
-            value={form.designation}
-            onChange={handleChange}
-          />
+          <select name="designation" value={form.designation} onChange={handleChange} required>            
+            <option value="Junior HR Associate">Junior HR Associate</option>
+            <option value="Senior HR Specialist">Senior HR Specialist</option>
+            <option value="HR Manager">HR Manager</option>
+          </select>
           <input
             type="date"
             name="joiningDate"
             value={form.joiningDate || ""}
             onChange={handleChange}
+            max={new Date().toISOString().split("T")[0]}
           />
-
-          <button className="primary-btn">
-            Edit HR
-          </button>
+          <button className="primary-btn">Edit HR</button>
         </form>
       </div>
-      </div>
+    </div>
   );
 }

@@ -1,45 +1,44 @@
 /* eslint-disable react-hooks/immutability */
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  getAllEmployee,
-  deleteEmployee,
-  disableEmployee
-} from "../../api/HrServices/employeeService";
+import { getAllEmployeesForAdmin } from "../../api/AdminServices/employeeService";
 import "../../styles/hr.css";
 import SearchBar from "../../components/SearchBar";
 import Pagination from "../../components/Pagination";
-import ConfirmationDialog from "../../components/ConfirmationDialog";
-import { useToast } from "../../components/ToastContext";
 import { Inbox, Building2, User, ChevronDown, Check } from "lucide-react";
+import { useToast } from "../../components/ToastContext";
 
-export default function EmployeeManagement() {
+export default function AdminEmployeeList() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [department, setDepartment] = useState("");
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   
-  const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState(null);
-  const [selectedEmp, setSelectedEmp] = useState(null);
-
   // Custom Dropdown State
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const navigate = useNavigate();
   const { addToast } = useToast();
 
   const loadEmployees = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getAllEmployee({ search, department, page, size: 8 });
+      const res = await getAllEmployeesForAdmin({
+        search,
+        department,
+        page,
+        size: 8,
+      });
       setEmployees(res.data.content);
       setTotalPages(res.data.totalPages);
+      setTotalElements(res.data.totalElements);
     } catch (err) {
-      addToast(err.response?.data?.message || "Failed to load Employee data", "error");
+      addToast(
+        err.response?.data?.message || "Failed to load employee data",
+        "error",
+      );
     } finally {
       setLoading(false);
     }
@@ -75,42 +74,16 @@ export default function EmployeeManagement() {
     "Finance & Administration",
   ];
 
-  const openModal = (emp, type) => {
-    setSelectedEmp(emp);
-    setModalType(type);
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setSelectedEmp(null);
-    setModalType(null);
-  };
-
-  const handleConfirmAction = async () => {
-    try {
-      if (modalType === 'delete') {
-        await deleteEmployee(selectedEmp.id);
-        addToast("Employee deleted successfully", "success");
-      } else {
-        await disableEmployee(selectedEmp.id);
-        addToast("Employee account disabled", "warning");
-      }
-      loadEmployees();
-    } catch {
-      addToast("Operation failed", "error");
-    } finally {
-      closeModal();
-    }
-  };
-
   return (
     <div className="hr-page">
       <div className="hr-card">
-        <div className="hr-header" style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="hr-title" style={{ margin: 0 }}>Employee Management</h2>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <div className="hr-header" style={{ marginBottom: "30px" }}>
+          <div>
+            <h2 className="hr-title">All Employees</h2>
+            
+          </div>
+
+          <div className="hr-header-actions" style={{ gap: "16px" }}>
             {/* Custom Premium Dropdown */}
             <div className="custom-dropdown-container" ref={dropdownRef} style={{ position: 'relative', width: '220px' }}>
               <div 
@@ -209,15 +182,13 @@ export default function EmployeeManagement() {
               )}
             </div>
 
-            <SearchBar value={search} onChange={(val) => { setSearch(val); setPage(0); }} />
-
-            <button
-              className="btn btn-primary"
-              onClick={() => navigate("/hr/employee/create")}
-              style={{ whiteSpace: 'nowrap' }}
-            >
-              + Add Employee
-            </button>
+            <SearchBar
+              value={search}
+              onChange={(val) => {
+                setSearch(val);
+                setPage(0);
+              }}
+            />
           </div>
         </div>
 
@@ -226,33 +197,42 @@ export default function EmployeeManagement() {
             <thead>
               <tr>
                 <th>Email</th>
-                <th>Name</th>
+                <th>Full Name</th>
                 <th>Phone</th>
                 <th>Department</th>
-                <th>Assigned Manager</th>
+                <th>Reporting Manager</th>
                 <th>Joining Date</th>
                 <th>Status</th>
-                <th className="actions-col">Actions</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
-                <tr><td colSpan="8" className="empty-row">Loading...</td></tr>
+                <tr>
+                  <td colSpan="7" className="empty-row">
+                    <div style={{ padding: "20px" }}>Loading employees...</div>
+                  </td>
+                </tr>
               ) : employees.length > 0 ? (
                 employees.map((emp) => (
-                  <tr key={emp.id} className="row-hover">
+                  <tr key={emp.id}>
                     <td style={{ fontWeight: 500 }}>{emp.email}</td>
                     <td style={{ fontWeight: 500 }}>{emp.fullName}</td>
                     <td>{emp.phone}</td>
                     <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>                            
-                            {emp.department}
-                        </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        {emp.department}
+                      </div>
                     </td>
                     <td>
                         {emp.managerName ? (
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>                                 
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                 {emp.managerName}
                             </div>
                         ) : (
@@ -261,24 +241,36 @@ export default function EmployeeManagement() {
                     </td>
                     <td>{emp.joiningDate}</td>
                     <td>
-                      <span className={`status-badge ${emp.status === "ACTIVE" ? "status-active" : "status-inactive"}`}>
-                        {emp.status}
+                      <span
+                        className={`status-badge ${
+                          emp.status === "ACTIVE"
+                            ? "status-active"
+                            : "status-inactive"
+                        }`}
+                      >
+                        {emp.status === "ACTIVE" ? "Active" : "Inactive"}
                       </span>
-                    </td>
-                    <td className="actions-cell">
-                      <button className="btn btn-outline" onClick={() => navigate(`/hr/employee/edit/${emp.id}`)}>Edit</button>
-                      <button className="btn btn-warning" onClick={() => openModal(emp, 'disable')}>Disable</button>
-                      <button className="btn btn-danger" onClick={() => openModal(emp, 'delete')}>Delete</button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="empty-row">
-                    <div style={{ padding: '40px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'var(--text-muted)' }}>
-                      <Inbox size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
-                      <p style={{ fontSize: '16px', fontWeight: 500, marginBottom: '16px' }}>No Employee records found.</p>
-                      <button className="btn btn-primary" onClick={() => navigate("/hr/employee/create")}>+ Add First Employee</button>
+                  <td colSpan="7" className="empty-row">
+                    <div className="empty-state">
+                      <Inbox size={48} style={{ opacity: 0.5 }} />
+                      <p>No employees found matching your criteria.</p>
+                      {(search || department) && (
+                        <button
+                          className="btn btn-outline"
+                          style={{ marginTop: "10px" }}
+                          onClick={() => {
+                            setSearch("");
+                            setDepartment("");
+                          }}
+                        >
+                          Clear Filters
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -287,25 +279,12 @@ export default function EmployeeManagement() {
           </table>
         </div>
 
-        <Pagination 
-          currentPage={page} 
-          totalPages={totalPages} 
-          onPageChange={setPage} 
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
         />
       </div>
-
-      <ConfirmationDialog 
-        isOpen={showModal}
-        title={modalType === 'delete' ? "Delete Employee" : "Disable Employee"}
-        message={modalType === 'delete' 
-          ? "Are you sure you want to permanently delete this Employee?" 
-          : "Are you sure you want to disable this Employee account?"
-        }
-        confirmText={modalType === 'delete' ? "Delete" : "Disable"}
-        confirmColor={modalType === 'delete' ? "var(--danger)" : "var(--warning)"}
-        onConfirm={handleConfirmAction}
-        onCancel={closeModal}
-      />
 
       <style>{`
         @keyframes dropdownFade {
@@ -326,9 +305,6 @@ export default function EmployeeManagement() {
         .custom-dropdown-menu::-webkit-scrollbar-thumb {
             background: rgba(255,255,255,0.1);
             border-radius: 10px;
-        }
-        .row-hover:hover {
-            background: rgba(255,255,255,0.02) !important;
         }
       `}</style>
     </div>

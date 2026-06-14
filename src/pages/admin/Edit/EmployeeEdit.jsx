@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { updateEmployee , getEmployeeById } from "../../../api/HrServices/employeeService.js";
 import "../../../styles/employee.css";
+import { useToast } from "../../../components/ToastContext";
 
 
 export default function EmployeeEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const [form, setForm] = useState({
     email: "",
@@ -32,8 +34,13 @@ export default function EmployeeEdit() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await updateEmployee(id, form);
-    navigate("/hr/employee");
+    try {
+      await updateEmployee(id, form);
+      addToast("Employee updated successfully!", "success");
+      navigate("/hr/employee");
+    } catch (err) {
+      addToast(err.response?.data?.message || "Failed to update Employee", "error");
+    }
   };
 
   return (

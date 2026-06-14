@@ -7,14 +7,22 @@ export default function ConfirmationDialog({
   onConfirm, 
   onCancel,
   confirmText = "Confirm",
-  confirmColor = "var(--danger)"
+  confirmColor = "var(--danger)",
+  data
 }) {
   if (!isOpen) return null;
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
+      <div className="modal-content glass-modal">
         <h3 className="modal-title">{title}</h3>
+        {data && (
+          <div className="modal-user-info">
+            <p><strong>Name:</strong> {data.fullName}</p>
+            <p><strong>Email:</strong> {data.email}</p>
+            <p><strong>Designation:</strong> {data.designation}</p>
+          </div>
+        )}
         <p className="modal-text">{message}</p>
         <div className="modal-actions">
           <button 

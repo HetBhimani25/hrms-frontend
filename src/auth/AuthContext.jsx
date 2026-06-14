@@ -19,8 +19,15 @@ export const AuthProvider = ({ children }) => {
   const roles = auth?.roles || [];
 
   const login = (data) => {
-    setAuth(data);
-    localStorage.setItem("auth", JSON.stringify(data));
+    // Only store non-sensitive user profile data in localStorage.
+    // Tokens are now managed securely by the browser via HttpOnly cookies.
+    const userProfile = {
+      roles: data.roles,
+      fullName: data.fullName
+    };
+    
+    setAuth(userProfile);
+    localStorage.setItem("auth", JSON.stringify(userProfile));
   };
 
   const logout = () => {

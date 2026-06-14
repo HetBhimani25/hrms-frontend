@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search } from 'lucide-react';
 
-export default function SearchBar({ value, onChange, placeholder = "Search..." }) {
+export default function SearchBar({ value, onChange, placeholder = "Search By Name..." }) {
   return (
     <div className="search-bar-wrapper">
       <Search className="search-icon" size={18} />

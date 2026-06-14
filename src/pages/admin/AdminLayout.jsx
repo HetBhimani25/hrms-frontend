@@ -1,9 +1,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import api from "../../api/axios";
-import ThemeToggle from "../../theme/ThemeToggle";
-import NotificationBell from "../../components/NotificationBell";
-import { LayoutDashboard, UserCog, Users } from "lucide-react";
+import { LayoutDashboard, UserCog, Users, Activity, User } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import "../../styles/admin.css";
 
@@ -23,25 +21,23 @@ function AdminLayout() {
       console.error("Logout failed", e);
     } finally {
       logout();
-      addToast("Logged out successfully", "info");
+      addToast("Logged out successfully", "error");
       navigate("/login");
     }
   };
 
   return (
-    <div className="admin-layout">      
+    <div className="admin-layout">
       <header className="admin-header">
         <h2>HRMS Admin</h2>
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <NotificationBell />
-          <ThemeToggle />
+        <div style={{ display: "flex", gap: "15px", alignItems: "center" }}>
           <button className="logout-btn" onClick={handleLogout}>
             Logout
           </button>
         </div>
       </header>
 
-      <div className="admin-main">        
+      <div className="admin-main">
         <aside className="admin-sidebar static">
           <NavLink to="/admin" end className="side-link">
             <span className="link-icon">
@@ -62,6 +58,20 @@ function AdminLayout() {
               <Users size={20} />
             </span>
             <span className="link-text">Manager</span>
+          </NavLink>         
+
+          <NavLink to="/admin/employees" className="side-link">
+            <span className="link-icon">
+              <User size={20} />
+            </span>
+            <span className="link-text">Employees</span>
+          </NavLink>
+          
+          <NavLink to="/admin/activities" className="side-link">
+            <span className="link-icon">
+              <Activity size={20} />
+            </span>
+            <span className="link-text">Recent Activity</span>
           </NavLink>
         </aside>
 
