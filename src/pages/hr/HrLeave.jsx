@@ -126,6 +126,8 @@ function HrLeave() {
                       <td>
                         <span
                           style={{
+                            display: 'inline-block',
+                            whiteSpace: 'nowrap',
                             padding: '6px 14px',
                             borderRadius: '10px',
                             fontSize: '11px',

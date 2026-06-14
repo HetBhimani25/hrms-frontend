@@ -53,6 +53,8 @@
 ================================ */
 .admin-sidebar {
   width: 240px;
+  min-width: 240px;
+  flex-shrink: 0;
   background: rgba(2, 6, 23, 0.8);
   backdrop-filter: blur(12px);
   padding: 22px;
