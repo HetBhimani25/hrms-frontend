@@ -1,6 +1,8 @@
 import React from 'react';
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import HomeRedirect from "./routes/HomeRedirect";
 import { ToastProvider } from "./components/ToastContext";
@@ -44,6 +46,8 @@ function App() {
         <Routes>
           <Route path="/" element={<HomeRedirect />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* ADMIN */}
           <Route
